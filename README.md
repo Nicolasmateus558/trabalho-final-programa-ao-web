@@ -5,6 +5,7 @@ Projeto acadêmico de Computação Paralela utilizando o dataset PaySim1 para an
 
 📊 Dataset utilizado:
 PaySim1 - Kaggle
+https://www.kaggle.com/datasets/ealaxi/paysim1
 
 📌 Objetivo
 
