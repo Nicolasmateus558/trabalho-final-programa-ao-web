@@ -46,9 +46,6 @@ Projeto_Paralela_PaySim/
 
 ⚙️ Instalação
 
-Clone o repositório:
-
-git clone https://github.com/SEU-USUARIO/SEU-REPOSITORIO.git
 
 Instale as dependências:
 
