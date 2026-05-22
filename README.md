@@ -1,4 +1,3 @@
-# Detecção  de fraudes em transações bancárias
 # Detecção de Fraudes em Transações Bancárias
 
 Projeto acadêmico de Computação Paralela utilizando o dataset PaySim1 para análise de transações financeiras e simulação de detecção de fraudes.
