@@ -1,4 +1,4 @@
-# Detecção  de grandes em transações bancárias
+# Detecção  de fraudes em transações bancárias
 🚀 Computação Paralela com PaySim1
 
 Projeto acadêmico de Computação Paralela utilizando o dataset PaySim1 para análise de transações financeiras e simulação de detecção de fraudes.
