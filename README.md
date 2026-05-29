@@ -67,14 +67,24 @@ python 04_paralelo.py
 python 05_graficos.py
 ```
 
-## Resultados Parciais
+## O que a análise calcula
+Para cada chunk do dataset:
+- Total de transações e fraudes detectadas
+- **Z-score manual por tipo** — identifica transações com valor muito acima do padrão
+- **Detecção de outliers** — transações com zscore > 3 são marcadas como suspeitas
+- **Inconsistência de saldo** — verifica se o saldo do remetente não foi alterado em transações marcadas como fraude (indicador real de fraude no PaySim)
+- Estatísticas detalhadas por tipo de transação
+
+## Resultados
 
 | Etapa | Resultado |
 |-------|-----------|
 | Dataset original | 6.362.620 linhas |
 | Dataset expandido | 44.538.340 linhas — 3,31 GB |
 | Fraudes detectadas | 57.491 (0,1291%) |
-| Tempo serial (processamento) | ~4,42 segundos |
+| Transações suspeitas (zscore > 3) | 499.070 |
+| Inconsistências de saldo | 399 |
+| **Tempo serial** | **12,33 segundos** |
 | Tempo paralelo | em desenvolvimento |
 | Speedup | em desenvolvimento |
 
