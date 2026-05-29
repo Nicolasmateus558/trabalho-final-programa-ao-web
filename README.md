@@ -74,7 +74,7 @@ python 05_graficos.py
 | Dataset original | 6.362.620 linhas |
 | Dataset expandido | 44.538.340 linhas — 3,31 GB |
 | Fraudes detectadas | 57.491 (0,1291%) |
-| Tempo serial (processamento) | ~0,31 segundos |
+| Tempo serial (processamento) | ~4,42 segundos |
 | Tempo paralelo | em desenvolvimento |
 | Speedup | em desenvolvimento |
 
