@@ -1,121 +1,91 @@
 # Detecção de Fraudes em Transações Bancárias
-
 Projeto acadêmico de Computação Paralela utilizando o dataset PaySim1 para análise de transações financeiras e simulação de detecção de fraudes.
 
 ## Dataset
+[PaySim1 — Kaggle](https://www.kaggle.com/datasets/ealaxi/paysim1)
 
-PaySim1:  
-https://www.kaggle.com/datasets/ealaxi/paysim1
-
----
+Dataset simulado de transações financeiras via celular com ~6,3 milhões de registros. Colunas principais: `step`, `type`, `amount`, `isFraud`.
 
 ## Objetivo
+Comparar o desempenho entre processamento **sequencial** e **paralelo** utilizando grandes volumes de dados (~44 milhões de linhas / 3,31 GB).
 
-O foco do projeto é comparar o desempenho entre:
-
-- Processamento Sequencial
-- Processamento Paralelo com `multiprocessing`
-
-Utilizando grandes volumes de dados para medir:
-
+Métricas avaliadas:
 - Tempo de execução
-- Speedup
-- Ganho de desempenho
-- Eficiência do paralelismo
+- Speedup (Tempo Serial / Tempo Paralelo)
+- Ganho de desempenho com paralelismo
 
----
-
-## Tecnologias Utilizadas
-
+## Ferramentas Utilizadas
 - Python 3
 - Pandas
 - NumPy
 - Matplotlib
 - Multiprocessing
 
----
-
 ## Estrutura do Projeto
-
-```txt
+```
 Projeto_Paralela_PaySim/
-│
-├── data/                # Dataset
-├── src/                 # Códigos principais
-├── resultados/          # Gráficos e resultados
-├── README.md
+├── paysim.csv                  # Dataset original (~6,3M linhas)
+├── paysim_grande.csv           # Dataset expandido (~44M linhas / 3,31 GB)
+├── 01_explorar_dataset.py      # Exploração e entendimento do dataset
+├── 02_expandir_dataset.py      # Expansão artificial dos dados
+├── 03_sequencial.py            # Análise sequencial (baseline)
+├── 04_paralelo.py              # Análise paralela com multiprocessing
+├── 05_graficos.py              # Geração de gráficos de desempenho
+├── tempo_sequencial.txt        # Tempo serial salvo para comparação
 └── requirements.txt
 ```
 
----
-
-## Funcionalidades
-
-- Carregamento do dataset com pandas
-- Explicação das colunas do PaySim
-- Aumento artificial do dataset
-- Análise sequencial
-- Processamento paralelo
-- Comparação de desempenho
-- Cálculo de speedup
-- Geração de gráficos
-
----
-
-Instale as dependências:
-
+## Instalação
 ```bash
-pip install -r requirements.txt
+pip install pandas numpy matplotlib seaborn tqdm
 ```
-
----
 
 ## Execução
 
-### Rodar análise inicial
-
+### 1. Explorar o dataset original
 ```bash
-python src/main.py
+python 01_explorar_dataset.py
 ```
 
-### Aumentar dataset
-
+### 2. Expandir o dataset para ~3GB
 ```bash
-python src/aumento_dataset.py
+python 02_expandir_dataset.py
 ```
 
-### Executar versão sequencial
-
+### 3. Rodar versão sequencial (baseline)
 ```bash
-python src/sequencial.py
+python 03_sequencial.py
 ```
 
-### Executar versão paralela
-
+### 4. Rodar versão paralela
 ```bash
-python src/paralelo.py
+python 04_paralelo.py
 ```
 
----
+### 5. Gerar gráficos de comparação
+```bash
+python 05_graficos.py
+```
+
+## Resultados Parciais
+
+| Etapa | Resultado |
+|-------|-----------|
+| Dataset original | 6.362.620 linhas |
+| Dataset expandido | 44.538.340 linhas — 3,31 GB |
+| Fraudes detectadas | 57.491 (0,1291%) |
+| Tempo serial (processamento) | ~0,31 segundos |
+| Tempo paralelo | em desenvolvimento |
+| Speedup | em desenvolvimento |
+
+> O tempo medido considera apenas o processamento dos chunks, sem a leitura do arquivo, garantindo comparação justa entre as versões.
 
 ## Fórmula do Speedup
-
-Speedup = Tempo Sequencial / Tempo Paralelo
-
----
-
-## Resultados Esperados
-
-- Melhor desempenho utilizando paralelismo
-- Redução do tempo de processamento
-- Comparação visual através de gráficos
-- Aplicação prática de computação paralela
-
----
+```
+Speedup = Tempo Serial / Tempo Paralelo
+```
 
 ## Autor
+**Kelvin Rafael de Souza Pereira**
 
-Kelvin Raphael de Souza Pereira
-
-LinkedIn:  
-https://www.linkedin.com/in/kelvin-raphael-7b4278231
+[LinkedIn](https://www.linkedin.com/in/kelvin-raphael-7b4278231)
