@@ -1,0 +1,6 @@
+paysim.csv
+paysim_grande.csv
+tempo_sequencial.txt
+resultados_benchmark.txt
+__pycache__/
+*.pyc
