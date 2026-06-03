@@ -46,6 +46,16 @@ O problema consiste em analisar um dataset de transações financeiras (PaySim1)
 
 **Estratégia de leitura:** O arquivo foi lido em chunks de 1.000.000 linhas via `pd.read_csv(chunksize=1_000_000)`, pois o dataset ultrapassa a memória RAM disponível e não pode ser carregado de uma só vez.
 
+**Cálculos realizados em cada chunk:**
+
+1. **Contagem de transações e fraudes** — para cada chunk, conta o total de transações e soma os registros onde `isFraud = 1`, identificando quantas são fraudulentas.
+
+2. **Valor total movimentado** — soma o campo `amount` de todas as transações do chunk, obtendo o volume financeiro processado.
+
+3. **Agrupamento por tipo de transação** — agrupa as transações pelos 5 tipos existentes (PAYMENT, TRANSFER, CASH_OUT, CASH_IN, DEBIT) e calcula, para cada tipo: quantidade de transações, número de fraudes e valor total movimentado.
+
+Ao final, a função `consolidar_resultados()` soma os resultados dos 204 chunks, produzindo os totais gerais.
+
 **Configurações testadas (serial):**
 - 1 processo (serial) — baseline medido
 
