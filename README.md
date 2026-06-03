@@ -1,101 +1,138 @@
-# Detecção de Fraudes em Transações Bancárias
-Projeto acadêmico de Computação Paralela utilizando o dataset PaySim1 para análise de transações financeiras e simulação de detecção de fraudes.
+# Relatório — Detecção de Fraudes em Transações Bancárias com Computação Paralela
 
-## Dataset
-[PaySim1 — Kaggle](https://www.kaggle.com/datasets/ealaxi/paysim1)
+**Disciplina:** Programação Concorrente e Distribuída
+**Aluno(s):** Kelvin Raphael de Souza Pereira
+**Turma:**
+**Professor:**
+**Data:**
 
-Dataset simulado de transações financeiras via celular com ~6,3 milhões de registros. Colunas principais: `step`, `type`, `amount`, `isFraud`.
+---
 
-## Objetivo
-Comparar o desempenho entre processamento **sequencial** e **paralelo** utilizando grandes volumes de dados (~44 milhões de linhas / 3,31 GB).
+## 1. Descrição do Problema
 
-Métricas avaliadas:
-- Tempo de execução
-- Speedup (Tempo Serial / Tempo Paralelo)
-- Ganho de desempenho com paralelismo
+O problema consiste em analisar um dataset de transações financeiras (PaySim1) contendo **6.362.620 registros**, aplicando técnicas de detecção de fraudes e medindo o desempenho entre execução serial e paralela com diferentes números de processos.
 
-## Ferramentas Utilizadas
-- Python 3
-- Pandas
-- NumPy
-- Matplotlib
-- Multiprocessing
+**Algoritmo utilizado:** Análise de fraudes por chunks, paralelizada distribuindo os chunks entre processos independentes usando `multiprocessing.Pool`.
 
-## Estrutura do Projeto
+**Tamanho da entrada:** 6.362.620 transações financeiras (arquivo `paysim.csv`, ~460 MB).
+
+**Objetivo da paralelização:** Reduzir o tempo de execução da análise utilizando múltiplos processos, contornando o GIL do Python com `multiprocessing`.
+
+**Complexidade aproximada:** O(n) por chunk, onde n é o número de transações no chunk.
+
+**Técnicas de detecção de fraude aplicadas:**
+- **Z-score por tipo de transação** — identifica valores estatisticamente anômalos
+- **Lei de Benford** — fraudes tendem a violar a distribuição natural dos primeiros dígitos dos valores
+- **Alta velocidade por conta** — muitas transações da mesma conta no mesmo período são suspeitas
+- **Inconsistência de saldo** — saldo não alterado após transação é indicador direto de fraude no PaySim
+
+---
+
+## 2. Ambiente Experimental
+
+| Item | Descrição |
+|------|-----------|
+| Processador | Intel(R) Core(TM) i5-4590 CPU @ 3.30GHz |
+| Número de núcleos | 4 núcleos físicos / 4 lógicos |
+| Memória RAM | 16,0 GB |
+| Sistema Operacional | Windows 10 Home |
+| Linguagem utilizada | Python 3.14 |
+| Biblioteca de paralelização | multiprocessing (Pool + map) |
+| Versão do Python | 3.14 |
+
+---
+
+## 3. Metodologia de Testes
+
+**Medição de tempo:** Utilizou-se `time.time()` antes e depois do processamento dos chunks, excluindo o tempo de leitura do arquivo para garantir comparação justa.
+
+**Número de execuções:** 1 execução por configuração.
+
+**Entrada utilizada:** `paysim.csv` com 6.362.620 transações financeiras.
+
+**Configurações testadas:**
+- 1 processo (serial)
+- 2 processos
+- 4 processos
+- 8 processos
+
+**Estratégia de paralelização:**
+
+O dataset foi dividido em chunks de 1.000.000 linhas. Cada chunk foi distribuído entre os processos via `multiprocessing.Pool.map()`, que executa a função `analisar_chunk()` em paralelo. Por usar processos (não threads), o GIL do Python não limita o desempenho — cada processo tem seu próprio interpretador e executa em um núcleo físico diferente.
+
+---
+
+## 4. Resultados Experimentais
+
+| Nº de Processos | Tempo de Execução (s) |
+|-----------------|----------------------|
+| 1 (serial)      | 28.2915              |
+| 2               | *(a preencher)*      |
+| 4               | *(a preencher)*      |
+| 8               | *(a preencher)*      |
+
+---
+
+## 5. Cálculo de Speedup e Eficiência
+
+**Fórmulas utilizadas:**
+
 ```
-Projeto_Paralela_PaySim/
-├── paysim.csv                  # Dataset original (~6,3M linhas)
-├── paysim_grande.csv           # Dataset expandido (~44M linhas / 3,31 GB)
-├── 01_explorar_dataset.py      # Exploração e entendimento do dataset
-├── 02_expandir_dataset.py      # Expansão artificial dos dados
-├── 03_sequencial.py            # Análise sequencial (baseline)
-├── 04_paralelo.py              # Análise paralela com multiprocessing
-├── 05_graficos.py              # Geração de gráficos de desempenho
-├── tempo_sequencial.txt        # Tempo serial salvo para comparação
-└── requirements.txt
-```
-
-## Instalação
-```bash
-pip install pandas numpy matplotlib seaborn tqdm
-```
-
-## Execução
-
-### 1. Explorar o dataset original
-```bash
-python 01_explorar_dataset.py
-```
-
-### 2. Expandir o dataset para ~3GB
-```bash
-python 02_expandir_dataset.py
-```
-
-### 3. Rodar versão sequencial (baseline)
-```bash
-python 03_sequencial.py
-```
-
-### 4. Rodar versão paralela
-```bash
-python 04_paralelo.py
-```
-
-### 5. Gerar gráficos de comparação
-```bash
-python 05_graficos.py
-```
-
-## O que a análise calcula
-Para cada chunk do dataset:
-- Total de transações e fraudes detectadas
-- **Z-score manual por tipo** — identifica transações com valor muito acima do padrão
-- **Detecção de outliers** — transações com zscore > 3 são marcadas como suspeitas
-- **Inconsistência de saldo** — verifica se o saldo do remetente não foi alterado em transações marcadas como fraude (indicador real de fraude no PaySim)
-- Estatísticas detalhadas por tipo de transação
-
-## Resultados
-
-| Etapa | Resultado |
-|-------|-----------|
-| Dataset original | 6.362.620 linhas |
-| Dataset expandido | 44.538.340 linhas — 3,31 GB |
-| Fraudes detectadas | 57.491 (0,1291%) |
-| Transações suspeitas (zscore > 3) | 499.070 |
-| Inconsistências de saldo | 399 |
-| **Tempo serial** | **12,33 segundos** |
-| Tempo paralelo | em desenvolvimento |
-| Speedup | em desenvolvimento |
-
-> O tempo medido considera apenas o processamento dos chunks, sem a leitura do arquivo, garantindo comparação justa entre as versões.
-
-## Fórmula do Speedup
-```
-Speedup = Tempo Serial / Tempo Paralelo
+Speedup(p)    = T(1) / T(p)
+Eficiência(p) = Speedup(p) / p
 ```
 
-## Autor
-**Kelvin Rafael de Souza Pereira**
+---
 
-[LinkedIn](https://www.linkedin.com/in/kelvin-raphael-7b4278231)
+## 6. Tabela de Resultados
+
+| Processos | Tempo (s) | Speedup | Eficiência |
+|-----------|-----------|---------|------------|
+| 1         | 28.2915   | 1.00    | 1.00       |
+| 2         | *(a preencher)* | *(a calcular)* | *(a calcular)* |
+| 4         | *(a preencher)* | *(a calcular)* | *(a calcular)* |
+| 8         | *(a preencher)* | *(a calcular)* | *(a calcular)* |
+
+---
+
+## 7. Gráfico de Tempo de Execução
+
+*(inserir gráfico gerado pelo script `05_graficos.py`)*
+
+**Eixo X:** Número de processos
+**Eixo Y:** Tempo de execução (segundos)
+
+---
+
+## 8. Gráfico de Speedup
+
+*(inserir gráfico gerado pelo script `05_graficos.py`)*
+
+---
+
+## 9. Gráfico de Eficiência
+
+*(inserir gráfico gerado pelo script `05_graficos.py`)*
+
+---
+
+## 10. Análise dos Resultados
+
+*(a completar após rodar o paralelo)*
+
+**Pontos esperados de análise:**
+- O speedup com `multiprocessing` tende a ser real (diferente de threads), pois cada processo usa um núcleo físico independente
+- Com 4 núcleos disponíveis, o ganho máximo esperado é ~4x (speedup ideal)
+- O speedup real será menor devido ao overhead de: criação de processos, serialização dos dados entre processos (pickle) e junção dos resultados
+- A eficiência tende a cair com o aumento do número de processos acima do número de núcleos físicos (4)
+
+---
+
+## 11. Conclusão
+
+*(a completar após rodar o paralelo)*
+
+O projeto demonstrou que a análise de fraudes em grandes volumes de dados pode se beneficiar significativamente do paralelismo via `multiprocessing`. Ao contrário de threads, processos independentes contornam o GIL do Python e permitem verdadeiro paralelismo em operações CPU-bound, como os cálculos estatísticos aplicados.
+
+**Dataset:** PaySim1 — Kaggle ([link](https://www.kaggle.com/datasets/ealaxi/paysim1))
+**Autor:** Kelvin Raphael de Souza Pereira
