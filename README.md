@@ -1,4 +1,4 @@
-# Relatório — Detecção de Fraudes em Transações Bancárias com Computação Paralela
+# Detecção de Fraudes em Transações Bancárias com Computação Paralela
 
 **Disciplina:** Programação Concorrente e Distribuída
 **Aluno(s):** Kelvin Raphael de Souza Pereira
