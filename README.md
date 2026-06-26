@@ -1,74 +1,202 @@
-# Detecção de Fraudes em Transações Bancárias com Computação Paralela
+# Relatório — Detecção de Fraudes em Transações Bancárias com Computação Paralela
 
-Este é um projeto acadêmico para a disciplina de **Programação Concorrente e Distribuída** que analisa fraudes financeiras usando o dataset PaySim1, comparando desempenho entre processamento serial e paralelo com `multiprocessing`.
+**Disciplina:** Programação Concorrente e Distribuída
+**Aluno(s):** Kelvin Raphael de Souza Pereira
+**Turma:**
+**Professor:**
+**Data:**
 
-## Principais Destaques
+---
 
-**Objetivo:** Demonstrar ganhos práticos de computação paralela processando centenas de milhões de registros bancários.
+## 1. Descrição do Problema
 
-**Tecnologia:** Python com `multiprocessing` em vez de threads, pois múltiplas threads não conseguem executar código Python simultaneamente em operações CPU-bound devido ao GIL.
+O problema consiste em analisar um dataset de transações financeiras (PaySim1) contendo **203.603.840 registros** (~15 GB), aplicando técnicas de detecção de fraudes e medindo o desempenho entre execução serial e paralela com diferentes números de processos.
 
-## Dataset PaySim1
+**Algoritmo utilizado:** Leitura do arquivo CSV em chunks de 1.000.000 linhas, com processamento sequencial (serial) e paralelo via `multiprocessing.Pool` — calculando estatísticas de fraude, z-score e classificação de risco por transação.
 
-- **Tamanho original:** 6,3 milhões de transações (~460 MB)
-- **Versão expandida:** 203,6 milhões de transações (~15 GB)
-- **Taxa de fraude:** 0,1291% (predominante em TRANSFER e CASH_OUT)
-- **Valor movimentado:** R$ 36,6 trilhões na versão expandida
+**Tamanho da entrada:** 100.000.000 transações financeiras carregadas em memória para o benchmark (subset do dataset de 15 GB).
 
-## Execução dos Scripts
+**Objetivo da paralelização:** Reduzir o tempo de execução distribuindo os chunks entre múltiplos processos, contornando o GIL do Python com `multiprocessing`.
 
-Os 5 scripts devem rodar em sequência:
+**Complexidade aproximada:** O(n) por chunk, onde n é o número de transações.
 
-1. `01_explorar_dataset.py` — análise inicial do dataset
-2. `02_expandir_dataset.py` — gera versão de 15 GB
-3. `03_sequencial.py` — processamento serial (baseline)
-4. `04_paralelo.py` — benchmark com 1-12 processos
-5. `05_graficos.py` — gera visualizações de desempenho
+**Cálculos realizados em cada chunk:**
 
-## Resultados Obtidos
+1. **Contagem de transações e fraudes** — soma dos registros onde `isFraud = 1` e valor total movimentado (`amount`).
+
+2. **Z-score por tipo de transação** — para cada um dos 5 tipos (PAYMENT, TRANSFER, CASH_OUT, CASH_IN, DEBIT), calcula média e desvio padrão e identifica transações com z-score > 3 como outliers suspeitos.
+
+3. **Classificação de risco por transação** — classifica cada transação como ALTO, MÉDIO ou BAIXO risco com base no tipo e valor, identificando transações suspeitas não detectadas pelo sistema.
+
+Ao final, `consolidar_resultados()` soma os resultados de todos os chunks.
+
+---
+
+## 2. Ambiente Experimental
+
+### Ambiente 1 — Intel Core i5-4590
+
+| Item | Descrição |
+|------|-----------|
+| Processador | Intel(R) Core(TM) i5-4590 CPU @ 3.30GHz |
+| Número de núcleos | 4 núcleos físicos / 4 lógicos |
+| Memória RAM | 16,0 GB |
+| Sistema Operacional | Windows 10 Home |
+| Linguagem utilizada | Python 3.14 |
+| Biblioteca de paralelização | multiprocessing (Pool + map) |
+| Versão do Python | 3.14 |
+
+### Ambiente 2 — AMD Ryzen 7 5700
+
+| Item | Descrição |
+|------|-----------|
+| Processador | AMD Ryzen 7 5700 @ 3.70GHz |
+| Número de núcleos | 8 núcleos físicos / 16 threads lógicos |
+| Memória RAM | 32,0 GB |
+| Sistema Operacional | Windows 11 Pro 64-bit |
+| Linguagem utilizada | Python 3.14.6 |
+| Biblioteca de paralelização | multiprocessing (Pool + map) |
+| Versão do Python | 3.14.6 |
+
+---
+
+## 3. Metodologia de Testes
+
+**Medição de tempo:** Utilizou-se `time.time()` antes e depois do processamento dos chunks, excluindo o tempo de leitura do arquivo para garantir comparação justa entre serial e paralelo.
+
+**Número de execuções:** 1 execução por configuração.
+
+**Entrada utilizada:** 100 chunks de 1.000.000 linhas (100 milhões de transações), carregados previamente em memória a partir do `paysim_grande.csv`.
+
+**Configurações testadas:**
+- 1 processo (serial)
+- 2 processos
+- 4 processos
+- 8 processos
+- 12 processos
+
+**Estratégia de paralelização:**
+
+Os chunks carregados em memória foram distribuídos via `multiprocessing.Pool.map()`, que executa `processar_chunk()` em paralelo. Por usar processos (não threads), o GIL do Python não limita o desempenho — cada processo tem seu próprio interpretador e executa em um núcleo físico diferente.
+
+---
+
+## 4. Resultados Experimentais
 
 ### Ambiente 1 — Intel Core i5-4590 (4 núcleos)
 
-Com 4 processos paralelos:
-
-- **Tempo reduzido de 528s para 170s** (redução de 67,8%)
-- **Speedup de 3,11x com eficiência de 77,6%**
-- Ganho máximo limitado pelos 4 núcleos físicos disponíveis
-
-| Processos | Tempo (s) | Speedup | Eficiência |
-|-----------|-----------|---------|------------|
-| 1         | 528.00    | 1.00x   | 1.0000     |
-| 2         | —         | —       | —          |
-| 4         | 170.00    | 3.11x   | 0.7760     |
+| Nº de Processos | Tempo de Execução (s) |
+|-----------------|----------------------|
+| 1 (serial) | 528.5361 |
+| 2 | 293.5872 |
+| 4 | 170.1957 |
+| 8 | 165.2813 |
+| 12 | 152.2672 |
 
 ### Ambiente 2 — AMD Ryzen 7 5700 (8 núcleos físicos / 16 threads)
 
-**Especificações:**
-- Processador: AMD Ryzen 7 5700 — 8 núcleos físicos / 16 threads lógicos
-- Clock base: 3.701 MHz
-- RAM: 32 GB
-- Sistema Operacional: Windows 11 Pro 64-bit
-- Python: 3.14.6
-- Dataset: PaySim1 expandido — 203.603.840 transações (~15 GB, idêntico ao Ambiente 1)
+| Nº de Processos | Tempo de Execução (s) |
+|-----------------|----------------------|
+| 1 (serial) | 152.8856 |
+| 2 | 80.3647 |
+| 4 | 44.5028 |
+| 8 | 28.3136 |
+| 12 | 22.0006 |
 
-**Resultados:**
+---
+
+## 5. Cálculo de Speedup e Eficiência
+
+**Fórmulas utilizadas:**
+
+```
+Speedup(p)    = T(1) / T(p)
+Eficiência(p) = Speedup(p) / p
+```
+
+---
+
+## 6. Tabela de Resultados
+
+### Ambiente 1 — Intel Core i5-4590 (4 núcleos)
 
 | Processos | Tempo (s) | Speedup | Eficiência |
 |-----------|-----------|---------|------------|
-| 1         | 152.89    | 1.00x   | 1.0000     |
-| 2         | 80.36     | 1.90x   | 0.9512     |
-| 4         | 44.50     | 3.44x   | 0.8589     |
-| 8         | 28.31     | 5.40x   | 0.6750     |
-| 12        | 22.00     | 6.95x   | 0.5791     |
+| 1 | 528.5361 | 1.00 | 1.00 (100%) |
+| 2 | 293.5872 | 1.80 | 0.90 (90%) |
+| 4 | 170.1957 | 3.11 | 0.78 (77.6%) |
+| 8 | 165.2813 | 3.20 | 0.40 (40%) |
+| 12 | 152.2672 | 3.47 | 0.29 (28.9%) |
 
-**Comparação direta com 4 processos:** 3.44x (Ryzen 7 5700) vs 3.11x (i5-4590) — **+10,6% de speedup relativo**.
+### Ambiente 2 — AMD Ryzen 7 5700 (8 núcleos físicos / 16 threads)
 
-Com 8 núcleos disponíveis foi possível testar configurações além dos 4 processos do Ambiente 1, atingindo **6.95x de speedup com 12 processos** — mais que o dobro do melhor resultado anterior.
+| Processos | Tempo (s) | Speedup | Eficiência |
+|-----------|-----------|---------|------------|
+| 1 | 152.8856 | 1.00 | 1.00 (100%) |
+| 2 | 80.3647 | 1.90 | 0.95 (95.1%) |
+| 4 | 44.5028 | 3.44 | 0.86 (85.9%) |
+| 8 | 28.3136 | 5.40 | 0.67 (67.5%) |
+| 12 | 22.0006 | 6.95 | 0.58 (57.9%) |
 
-A eficiência mais alta no Ambiente 2 (85,9% com 4 processos vs 77,6% no Ambiente 1) reflete menor overhead de serialização IPC proporcionalmente ao poder de processamento disponível.
+---
 
-## Análise — Lei de Amdahl
+## 7. Gráfico de Tempo de Execução
 
-O crescimento do speedup desacelera conforme o número de processos aumenta, ilustrando a Lei de Amdahl: a fração sequencial do código (loop Python de classificação de risco) limita o ganho máximo teórico independentemente de quantos núcleos sejam usados.
+![Tempo de Execução](graficos/01_tempo.png)
 
-A eficiência cai de 95,1% com 2 processos para 57,9% com 12, evidenciando o overhead crescente de comunicação entre processos via IPC (Inter-Process Communication).
+**Observação:** O tempo cai significativamente de 1 para 4 processos. A partir de 8 processos o ganho é menor, pois o processador possui apenas 4 núcleos físicos.
+
+---
+
+## 8. Gráfico de Speedup
+
+![Speedup](graficos/02_speedup.png)
+
+**Observação:** O speedup real acompanha bem o ideal até 4 processos. A curva desacelera acima disso, demonstrando o efeito da Lei de Amdahl e a limitação de núcleos físicos.
+
+---
+
+## 9. Gráfico de Eficiência
+
+![Eficiência](graficos/03_eficiencia.png)
+
+**Observação:** A eficiência começa alta (90% com 2 processos) e cai à medida que o número de processos supera os núcleos físicos disponíveis, pois o sistema passa a fazer escalonamento de processos.
+
+---
+
+## 10. Análise dos Resultados
+
+O speedup obtido foi real e significativo até 4 processos, atingindo **3.11x** com eficiência de **77.6%**. O comportamento observado é explicado pelos seguintes fatores:
+
+- **Até 4 processos:** cada processo ocupa um núcleo físico distinto, o paralelismo é genuíno e o speedup cresce de forma próxima ao ideal.
+- **8 e 12 processos:** o ganho marginal diminui pois o processador possui apenas 4 núcleos. O sistema operacional passa a escalonar processos, gerando overhead de troca de contexto.
+- **Overhead do multiprocessing:** a criação de processos e a serialização dos dados (pickle) adicionam custo fixo, limitando o speedup máximo abaixo do ideal teórico.
+- **Lei de Amdahl:** a fração serial do código (consolidação de resultados, I/O) impõe um teto natural ao speedup, independentemente do número de processos.
+
+**Comparação com threads:** se fossem usadas threads (`threading`) em vez de processos, o resultado seria pior para operações CPU-bound, pois o GIL do Python impede execução paralela real de código Python entre threads.
+
+### Comparação entre Ambientes
+
+A execução no AMD Ryzen 7 5700 (Ambiente 2) demonstrou os ganhos reais proporcionados por um maior número de núcleos físicos:
+
+- Com 4 processos, o Ryzen atingiu **3.44x** de speedup contra **3.11x** do i5-4590 — uma melhora de **10,6%** na mesma configuração.
+- Com 8 processos foi possível atingir **5.40x**, configuração inviável no i5-4590 por falta de núcleos adicionais.
+- Com 12 processos o speedup chegou a **6.95x** — mais que o dobro do melhor resultado do Ambiente 1.
+- A eficiência com 4 processos foi de **85.9%** no Ryzen contra **77.6%** no i5, evidenciando menor overhead relativo de serialização IPC no processador mais moderno.
+
+O padrão de queda de eficiência segue a Lei de Amdahl em ambos os casos, confirmando que a fração serial do algoritmo (loop Python de classificação de risco) é o principal limitante independentemente do hardware utilizado.
+
+---
+
+## 11. Conclusão
+
+O projeto demonstrou que o paralelismo via `multiprocessing` traz ganho real de desempenho para análise de grandes volumes de dados. Com 4 processos, o tempo de processamento caiu de **528 segundos** para **170 segundos** — uma redução de **67,8%** com eficiência de **77,6%**.
+
+A execução no Ambiente 2 (AMD Ryzen 7 5700, 8 núcleos) reforçou essa conclusão: com 12 processos o tempo caiu de **152 segundos** para **22 segundos** — redução de **85,6%** e speedup de **6.95x** — evidenciando que o ganho de paralelismo escala diretamente com a disponibilidade de núcleos físicos.
+
+O uso de processos em vez de threads foi fundamental para contornar o GIL do Python e obter paralelismo genuíno em operações CPU-bound como z-score e classificação de risco.
+
+O aumento artificial do dataset para **15 GB** (203 milhões de transações) foi necessário para que o tempo de processamento fosse suficientemente alto para evidenciar os ganhos do paralelismo.
+
+**Dataset:** PaySim1 — Kaggle ([link](https://www.kaggle.com/datasets/ealaxi/paysim1))
+**Autor:** Kelvin Raphael de Souza Pereira
